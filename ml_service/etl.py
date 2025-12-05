@@ -14,8 +14,11 @@ def process_data(filepath):
 
     # 1. Check for Duplicates
     # Mark all duplicates as anomalies (keep first is False to find all)
-    dupe_mask = df.duplicated(subset=['claim_id'], keep=False)
-    df.loc[dupe_mask, 'anomaly_reasons'] += "Duplicate Claim ID; "
+    subset_cols = ['claim_id'] if 'claim_id' in df.columns else None
+    dupe_mask = df.duplicated(subset=subset_cols, keep=False)
+    
+    anomaly_msg = "Duplicate Claim ID; " if 'claim_id' in df.columns else "Duplicate Row; "
+    df.loc[dupe_mask, 'anomaly_reasons'] += anomaly_msg
     df.loc[dupe_mask, 'is_rule_anomaly'] = True
     
     duplicates_count = dupe_mask.sum()

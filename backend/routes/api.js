@@ -45,6 +45,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         form.append('datasetId', newDataset._id.toString());
 
         const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+        console.log(`Attempting to connect to ML Service at: ${mlServiceUrl}/process`);
 
         axios.post(`${mlServiceUrl}/process`, form, {
             headers: {
@@ -52,6 +53,12 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             }
         }).catch(err => {
             console.error('Error triggering Python service:', err.message);
+            if (err.response) {
+                console.error('Response status:', err.response.status);
+                console.error('Response data:', err.response.data);
+            } else {
+                console.error('Connection error:', err.code || err);
+            }
             newDataset.status = 'failed';
             newDataset.save();
         });
