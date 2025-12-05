@@ -23,6 +23,10 @@ mongoose.connect(process.env.DATABASE_URL)
   .catch(err => console.log(err));
 
 // Routes
+app.get('/', (req, res) => {
+  res.send('Backend is running! 🚀');
+});
+
 app.use('/api', apiRoutes);
 
 app.listen(PORT, () => {
