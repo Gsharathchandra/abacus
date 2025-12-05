@@ -18,10 +18,8 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database Connection
-mongoose.connect(process.env.DATABASE_URL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('MongoDB Connected'))
+mongoose.connect(process.env.DATABASE_URL)
+  .then(() => console.log('MongoDB Connected'))
   .catch(err => console.log(err));
 
 // Routes
