@@ -6,7 +6,6 @@ const axios = require('axios');
 const Dataset = require('../models/Dataset');
 const fs = require('fs');
 
-// Configure Multer for file upload
 const uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -23,22 +22,18 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// POST /api/upload
 router.post('/upload', upload.single('file'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ message: 'No file uploaded' });
     }
 
     try {
-        // Create initial record
         const newDataset = new Dataset({
             filename: req.file.filename,
             status: 'pending'
         });
         await newDataset.save();
 
-        // Trigger Python Service (Async)
-        // Stream file to ML Service
         const FormData = require('form-data');
         const form = new FormData();
         form.append('file', fs.createReadStream(req.file.path));
@@ -70,7 +65,6 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     }
 });
 
-// GET /api/results/:id
 router.get('/results/:id', async (req, res) => {
     try {
         const dataset = await Dataset.findById(req.params.id);
@@ -81,7 +75,6 @@ router.get('/results/:id', async (req, res) => {
     }
 });
 
-// GET /api/datasets (List all)
 router.get('/datasets', async (req, res) => {
     try {
         const datasets = await Dataset.find().sort({ uploadDate: -1 });
