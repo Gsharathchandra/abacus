@@ -22,6 +22,10 @@ import shutil
 
 # ... imports ...
 
+@app.get("/")
+def read_root():
+    return {"status": "ML Service is running! 🚀"}
+
 @app.post("/process")
 async def process_dataset(file: UploadFile = File(...), datasetId: str = Form(...)):
     temp_filename = f"temp_{datasetId}.csv"
