@@ -11,8 +11,9 @@ const Dashboard = ({ datasetId }) => {
     const fetchData = async () => {
         if (!datasetId) return;
         setLoading(true);
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
         try {
-            const res = await axios.get(`http://localhost:5000/api/results/${datasetId}`);
+            const res = await axios.get(`${API_URL}/api/results/${datasetId}`);
             setData(res.data);
         } catch (err) {
             console.error("Error fetching results:", err);

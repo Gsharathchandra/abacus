@@ -38,10 +38,18 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         await newDataset.save();
 
         // Trigger Python Service (Async)
-        // Assuming Python service runs on port 8000
-        axios.post('http://localhost:8000/process', {
-            filepath: path.resolve(req.file.path),
-            datasetId: newDataset._id
+        // Stream file to ML Service
+        const FormData = require('form-data');
+        const form = new FormData();
+        form.append('file', fs.createReadStream(req.file.path));
+        form.append('datasetId', newDataset._id.toString());
+
+        const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+
+        axios.post(`${mlServiceUrl}/process`, form, {
+            headers: {
+                ...form.getHeaders()
+            }
         }).catch(err => {
             console.error('Error triggering Python service:', err.message);
             newDataset.status = 'failed';

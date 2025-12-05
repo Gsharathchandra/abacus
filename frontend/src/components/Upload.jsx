@@ -18,9 +18,11 @@ const Upload = ({ onUploadSuccess }) => {
         const formData = new FormData();
         formData.append('file', file);
 
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
         setUploading(true);
         try {
-            const res = await axios.post('http://localhost:5000/api/upload', formData, {
+            const res = await axios.post(`${API_URL}/api/upload`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setMessage({ type: 'success', text: 'File uploaded successfully! Processing started.' });

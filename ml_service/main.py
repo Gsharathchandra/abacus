@@ -17,18 +17,21 @@ client = MongoClient(MONGO_URI)
 db = client['abacus'] # Database name from URI
 collection = db['datasets']
 
-class ProcessRequest(BaseModel):
-    filepath: str
-    datasetId: str
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+import shutil
+
+# ... imports ...
 
 @app.post("/process")
-async def process_dataset(request: ProcessRequest):
+async def process_dataset(file: UploadFile = File(...), datasetId: str = Form(...)):
+    temp_filename = f"temp_{datasetId}.csv"
     try:
-        if not os.path.exists(request.filepath):
-            raise HTTPException(status_code=404, detail="File not found")
+        # Save uploaded file to temp
+        with open(temp_filename, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
 
         # 1. ETL: Load and Clean
-        df, quality_report = process_data(request.filepath)
+        df, quality_report = process_data(temp_filename)
 
         # 2. Anomaly Detection
         df_analyzed, anomaly_stats = detect_anomalies(df)
@@ -42,7 +45,7 @@ async def process_dataset(request: ProcessRequest):
 
         # 4. Update MongoDB
         collection.update_one(
-            {"_id": ObjectId(request.datasetId)},
+            {"_id": ObjectId(datasetId)},
             {
                 "$set": {
                     "status": "completed",
@@ -54,15 +57,19 @@ async def process_dataset(request: ProcessRequest):
             }
         )
 
-        return {"status": "success", "datasetId": request.datasetId}
+        return {"status": "success", "datasetId": datasetId}
 
     except Exception as e:
         # Update status to failed
         collection.update_one(
-            {"_id": ObjectId(request.datasetId)},
+            {"_id": ObjectId(datasetId)},
             {"$set": {"status": "failed", "error": str(e)}}
         )
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # Cleanup temp file
+        if os.path.exists(temp_filename):
+            os.remove(temp_filename)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
